@@ -277,10 +277,34 @@ function renderDzis(){
     html += `<div class="section-label">Stretching końcowy</div>` + d.stretch.map(ex=>exCardHTML(ex,dateISO,'exercise')).join('');
   } else if(sched.type === 'run'){
     html += `<div class="section-label">${isToday?"Dziś":"Ten dzień"}: ${sched.label}</div>`;
-    html += `<div class="info-card">Przejdź do zakładki <b>Bieganie</b>, żeby zapisać dzisiejszy trening. Pamiętaj o stretchingu bioder + glute bridge po biegu.</div>`;
+    const dayRuns = (getSession(dateISO).runs || []);
+    if(!dayRuns.length){
+      html += isToday
+        ? `<div class="info-card">Przejdź do zakładki <b>Bieganie</b>, żeby zapisać dzisiejszy trening. Pamiętaj o stretchingu bioder + glute bridge po biegu.</div>`
+        : `<div class="info-card">Brak zapisanego biegu tego dnia. Możesz go dodać w zakładce <b>Bieganie</b>, wybierając tę datę w polu „Data biegu".</div>`;
+    }
   } else {
     html += `<div class="section-label">${isToday?"Dziś":"Ten dzień"}: Odpoczynek</div>`;
     html += `<div class="info-card">Dzień bez treningu siłowego ani biegu. Ćwiczenia korekcyjne poniżej zostają — to jedyny element planu wykonywany codziennie.</div>`;
+  }
+
+  // zapisane biegi danego dnia — widoczne niezależnie od typu dnia
+  const runsOfDay = (STATE.sessions[dateISO] && STATE.sessions[dateISO].runs) || [];
+  if(runsOfDay.length){
+    const runTypeLbl = {interval:'Interwały/tempo', easy:'Spokojny (easy)', long:'Długi dystans'};
+    html += `<div class="section-label">${runsOfDay.length===1 ? 'Zapisany bieg' : 'Zapisane biegi'}</div>`;
+    html += runsOfDay.map(r=>{
+      const detail = [r.distance ? r.distance+' km' : null, r.duration || null].filter(Boolean).join(' · ');
+      return `<div class="run-entry">
+        <div class="re-dot" style="background:var(--run)"></div>
+        <div class="re-body">
+          <div class="re-date">${runTypeLbl[r.type] || r.type}</div>
+          <div class="re-detail">${detail || '—'}</div>
+          ${r.note ? `<div class="re-note">${r.note}</div>` : ''}
+        </div>
+        <button class="re-del" onclick="deleteRun('${dateISO}', ${r.ts||0})" aria-label="Usuń bieg">✕</button>
+      </div>`;
+    }).join('');
   }
 
   html += `<div class="section-label">Codzienne ćwiczenia korekcyjne</div>`;
