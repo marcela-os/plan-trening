@@ -166,6 +166,11 @@ main{padding:16px 18px 8px;max-width:640px;margin:0 auto}
 .stat .val{font-size:28px;font-weight:700;font-family:"Space Grotesk";color:var(--ink);letter-spacing:-.02em}
 .stat .lbl{font-size:10.5px;color:var(--ink-soft);margin-top:3px;font-weight:600}
 .dotgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0 4px}
+.dotcell.clickable{cursor:pointer}
+.dotcell.clickable:active{transform:scale(.94);transition:transform .08s}
+.run-entry.clickable{cursor:pointer}
+.run-entry.clickable:active{opacity:.75}
+.re-chev{color:var(--ink-soft);font-size:18px;align-self:center;flex:none;margin-left:4px}
 .dotcell{aspect-ratio:1;border-radius:7px;background:var(--surface-alt);position:relative;overflow:hidden}
 .dotcell .mark{position:absolute;inset:0}
 .dotcell .marks{position:absolute;inset:0;display:flex}

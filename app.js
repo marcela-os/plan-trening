@@ -461,11 +461,11 @@ function renderProgress(){
     let inner = '';
     if(bands.length) inner += `<div class="marks">${bands.map(c=>`<span class="mini" style="background:${c}"></span>`).join('')}</div>`;
     if(corr) inner += `<div class="corr-dot"></div>`;
-    return `<div class="dotcell">${inner}</div>`;
+    return `<div class="dotcell clickable" onclick="openDay('${iso}')">${inner}</div>`;
   }).join('');
 
   // session log list
-  const dates = Object.keys(STATE.sessions).filter(iso=>dayActive(STATE.sessions[iso])).sort().reverse().slice(0,10);
+  const dates = Object.keys(STATE.sessions).filter(iso=>dayActive(STATE.sessions[iso])).sort().reverse().slice(0,3);
   const logEl = document.getElementById('sessionLog');
   if(!dates.length){ logEl.innerHTML = '<div class="empty">Brak wpisów. Zaznacz ćwiczenia w planie, żeby zaczęły się tu pojawiać.</div>'; return; }
   logEl.innerHTML = dates.map(iso=>{
@@ -478,12 +478,13 @@ function renderProgress(){
     if(exDone) parts.push(exDone+' '+pl(exDone,'ćw. siłowe','ćw. siłowe','ćw. siłowych'));
     if(corDone) parts.push(corDone+' '+pl(corDone,'ćw. korekcyjne','ćw. korekcyjne','ćw. korekcyjnych'));
     if(runCount) parts.push(runCount+' '+pl(runCount,'bieg','biegi','biegów'));
-    return `<div class="run-entry">
+    return `<div class="run-entry clickable" onclick="openDay('${iso}')">
       <div class="re-dot" style="background:var(--posture)"></div>
       <div class="re-body">
         <div class="re-date">${fmtDate(iso)}</div>
         <div class="re-detail">${parts.join(' · ') || '—'}</div>
       </div>
+      <span class="re-chev">›</span>
     </div>`;
   }).join('');
 }
@@ -623,6 +624,14 @@ function importBackup(input){
   };
   reader.onerror = () => alert('Nie udało się odczytać pliku.');
   reader.readAsText(file);
+}
+
+/* ---------- OTWIERANIE DNIA Z KALENDARZA ---------- */
+function openDay(iso){
+  if(iso > todayISO()) return;
+  VIEW_DATE = iso;
+  renderAll();
+  switchTab('dzis');
 }
 
 /* ---------- TABS ---------- */
