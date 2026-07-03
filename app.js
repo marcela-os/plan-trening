@@ -105,7 +105,7 @@ const DAY_SHORT = ["Nd","Pon","Wt","Śr","Czw","Pt","Sob"];
 let STATE = {sessions:{}};
 let STORAGE_OK = true;
 
-function isoDate(d){ return d.toISOString().slice(0,10); }
+function isoDate(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function todayISO(){ return isoDate(new Date()); }
 
 async function loadState(){
@@ -213,6 +213,8 @@ function renderDayPanel(key){
   document.getElementById(`list-${key}-warmup`).innerHTML = d.warmup.map(ex=>exCardHTML(ex,dateISO,'exercise')).join('');
   document.getElementById(`list-${key}-main`).innerHTML = d.main.map(ex=>exCardHTML(ex,dateISO,'exercise')).join('');
   document.getElementById(`list-${key}-stretch`).innerHTML = d.stretch.map(ex=>exCardHTML(ex,dateISO,'exercise')).join('');
+  const corrEl = document.getElementById(`list-${key}-corrective`);
+  if(corrEl) corrEl.innerHTML = CORRECTIVE.map(ex=>exCardHTML(ex,dateISO,'corrective')).join('');
 }
 
 function renderCorrective(){
@@ -278,10 +280,10 @@ function renderDzis(){
     html += `<div class="info-card">Przejdź do zakładki <b>Bieganie</b>, żeby zapisać dzisiejszy trening. Pamiętaj o stretchingu bioder + glute bridge po biegu.</div>`;
   } else {
     html += `<div class="section-label">${isToday?"Dziś":"Ten dzień"}: Odpoczynek</div>`;
-    html += `<div class="info-card">Dzień bez treningu siłowego ani biegu. Ćwiczenia korektywne poniżej zostają — to jedyny element planu wykonywany codziennie.</div>`;
+    html += `<div class="info-card">Dzień bez treningu siłowego ani biegu. Ćwiczenia korekcyjne poniżej zostają — to jedyny element planu wykonywany codziennie.</div>`;
   }
 
-  html += `<div class="section-label">Codzienne ćwiczenia korektywne</div>`;
+  html += `<div class="section-label">Codzienne ćwiczenia korekcyjne</div>`;
   html += CORRECTIVE.map(ex=>exCardHTML(ex,dateISO,'corrective')).join('');
 
   document.getElementById('dzisContent').innerHTML = html;
@@ -367,8 +369,21 @@ function renderRunHistory(){
         <div class="re-detail">${detail || '—'}</div>
         ${r.note ? `<div class="re-note">${r.note}</div>` : ''}
       </div>
+      <button class="re-del" onclick="deleteRun('${r.date}', ${r.ts||0})" aria-label="Usuń bieg">✕</button>
     </div>`;
   }).join('');
+}
+
+function deleteRun(date, ts){
+  const s = STATE.sessions[date];
+  if(!s || !s.runs) return;
+  const idx = s.runs.findIndex(r => (r.ts||0) === ts);
+  if(idx === -1) return;
+  const r = s.runs[idx];
+  if(!confirm('Usunąć bieg z ' + fmtDate(date) + (r.distance ? ' (' + r.distance + ' km)' : '') + '?')) return;
+  s.runs.splice(idx, 1);
+  saveState();
+  renderAll();
 }
 
 function fmtDate(iso){
@@ -421,11 +436,11 @@ function renderProgress(){
   Object.values(STATE.sessions).forEach(s=>{ if(s.runs) totalRuns += s.runs.length; });
   document.getElementById('statRuns').textContent = totalRuns;
 
-  // dot grid: last 28 days, oldest first, 4 rows x 7 cols, aligned to weekday
+  // dot grid: bieżący tydzień + 3 pełne wstecz, wyrównane do poniedziałku
   const cells = [];
   const today = new Date();
   const todayWd = today.getDay();
-  const daysBack = 27 + ((todayWd===0?6:todayWd-1));
+  const daysBack = 21 + ((todayWd+6)%7);
   const start = new Date(today); start.setDate(today.getDate()-daysBack);
   const totalCells = Math.ceil((daysBack+1)/7)*7;
   for(let i=0;i<totalCells;i++){
@@ -437,11 +452,16 @@ function renderProgress(){
   grid.innerHTML = cells.map(iso=>{
     if(!iso) return '<div class="dotcell" style="opacity:0"></div>';
     const s = STATE.sessions[iso];
-    let color = null;
-    if(dayHasGym(s)) color = 'var(--posture)';
-    else if(dayHasRun(s)) color = 'var(--run)';
-    else if(dayHasCorrective(s)) color = 'var(--head)';
-    return `<div class="dotcell">${color?`<div class="mark" style="background:${color}"></div>`:''}</div>`;
+    const bands = [];
+    if(dayHasGym(s)) bands.push('var(--posture)');
+    if(dayHasRun(s)) bands.push('var(--run)');
+    const corr = dayHasCorrective(s);
+    // dzień odpoczynku = tylko korekcja, bez siłowni i biegu → wypełnij kolorem odpoczynku
+    if(!bands.length && corr) bands.push('var(--rest)');
+    let inner = '';
+    if(bands.length) inner += `<div class="marks">${bands.map(c=>`<span class="mini" style="background:${c}"></span>`).join('')}</div>`;
+    if(corr) inner += `<div class="corr-dot"></div>`;
+    return `<div class="dotcell">${inner}</div>`;
   }).join('');
 
   // session log list
@@ -454,9 +474,10 @@ function renderProgress(){
     const corDone = Object.values(s.corrective||{}).filter(e=>e.done).length;
     const runCount = (s.runs||[]).length;
     const parts = [];
-    if(exDone) parts.push(exDone+' ćw. siłowych');
-    if(corDone) parts.push(corDone+' korektywnych');
-    if(runCount) parts.push(runCount+' bieg' + (runCount>1?'i':''));
+    const pl = (n, one, few, many) => n===1 ? one : ((n%10>=2 && n%10<=4 && (n%100<12 || n%100>14)) ? few : many);
+    if(exDone) parts.push(exDone+' '+pl(exDone,'ćw. siłowe','ćw. siłowe','ćw. siłowych'));
+    if(corDone) parts.push(corDone+' '+pl(corDone,'ćw. korekcyjne','ćw. korekcyjne','ćw. korekcyjnych'));
+    if(runCount) parts.push(runCount+' '+pl(runCount,'bieg','biegi','biegów'));
     return `<div class="run-entry">
       <div class="re-dot" style="background:var(--posture)"></div>
       <div class="re-body">

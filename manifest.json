@@ -1,13 +1,13 @@
 {
-  "name": "Plan — postura, masa, półmaraton",
+  "name": "Siła · masa · bieg",
   "short_name": "Plan Treningowy",
-  "description": "Plan treningowy: postura, masa, przygotowanie do półmaratonu",
+  "description": "Plan treningowy: siła, masa mięśniowa, przygotowanie do półmaratonu i maratonu",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FAFAF8",
-  "theme_color": "#0F6E56",
+  "background_color": "#F7F7FA",
+  "theme_color": "#F7F7FA",
   "icons": [
     {
       "src": "icon-192.png",

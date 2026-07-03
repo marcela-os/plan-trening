@@ -1,11 +1,12 @@
-const CACHE_NAME = 'plan-treningowy-v2';
+const CACHE_NAME = 'plan-treningowy-v6';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
