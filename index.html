@@ -170,6 +170,9 @@ main{padding:16px 18px 8px;max-width:640px;margin:0 auto}
 .dotcell.clickable:active{transform:scale(.94);transition:transform .08s}
 .run-entry.clickable{cursor:pointer}
 .run-entry.clickable:active{opacity:.75}
+.custom-add{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.custom-add input{width:100%}
+.btn-small{padding:10px 14px;font-size:13px}
 .re-chev{color:var(--ink-soft);font-size:18px;align-self:center;flex:none;margin-left:4px}
 .dotcell{aspect-ratio:1;border-radius:7px;background:var(--surface-alt);position:relative;overflow:hidden}
 .dotcell .mark{position:absolute;inset:0}
@@ -284,6 +287,7 @@ footer.spacer{height:8px}
     <div class="section-label">Na koniec: korekcja (10 min)</div>
     <div class="info-card" style="margin-bottom:10px"><p>Te same ćwiczenia co w zakładce Korekcja — odhaczenia liczą się w obu miejscach.</p></div>
     <div id="list-a-corrective"></div>
+    <div id="list-a-custom"></div>
   </div>
 
   <!-- DZIEŃ B -->
@@ -297,6 +301,7 @@ footer.spacer{height:8px}
     <div class="section-label">Na koniec: korekcja (10 min)</div>
     <div class="info-card" style="margin-bottom:10px"><p>Te same ćwiczenia co w zakładce Korekcja — odhaczenia liczą się w obu miejscach.</p></div>
     <div id="list-b-corrective"></div>
+    <div id="list-b-custom"></div>
   </div>
 
   <!-- DZIEŃ C -->
@@ -310,6 +315,7 @@ footer.spacer{height:8px}
     <div class="section-label">Na koniec: korekcja (10 min)</div>
     <div class="info-card" style="margin-bottom:10px"><p>Te same ćwiczenia co w zakładce Korekcja — odhaczenia liczą się w obu miejscach.</p></div>
     <div id="list-c-corrective"></div>
+    <div id="list-c-custom"></div>
   </div>
 
   <!-- KOREKCJA -->
@@ -319,6 +325,7 @@ footer.spacer{height:8px}
     </p>
     <div class="section-label">Codzienne ćwiczenia — dzisiaj</div>
     <div id="list-corrective"></div>
+    <div id="list-corrective-custom"></div>
     <div class="section-label">Wskazówki na co dzień</div>
     <div class="info-card"><h3>Nawyk „sprawdź postawę”</h3><p>Ustaw przypomnienie w telefonie co 45 min. Przy każdym sygnale: cofnij łopatki, podnieś mostek, chin tuck, napnij lekko brzuch. 5 sekund. Rób to przez 3 miesiące — efekt trwały.</p></div>
     <div class="info-card"><h3>Pozycja przy komputerze / telefonie</h3><p>Monitor na poziomie oczu. Telefon do poziomu oczu — nie opuszczaj głowy. Każda godzina z głową pochyloną o 45° = ok. 22 kg obciążenia na kręgosłup szyjny.</p></div>
@@ -329,7 +336,7 @@ footer.spacer{height:8px}
   <div class="panel" id="panel-bieganie">
     <div class="info-card" style="margin-bottom:14px">
       <h3>Cel: półmaraton, październik</h3>
-      <p>Wtorek — krótszy bieg intensywny (interwały/tempo). Czwartek — bieg spokojny (easy), jeśli Runna go zaplanuje. Sobota — długi, spokojny bieg, wydłużany stopniowo (+1–2 km co 1–2 tyg., co 3–4 tyg. tydzień lżejszy). Nogi trenujesz w poniedziałek — daleko od sobotniego długiego biegu, żeby biec na świeżych nogach. Po KAŻDYM biegu: stretching zginaczy biodra + glute bridge (bieganie nasila APT).</p>
+      <p>Wtorek — krótszy bieg intensywny (interwały/tempo). Czwartek — bieg spokojny (easy), jeśli Runna go zaplanuje. Niedziela — długi, spokojny bieg, wydłużany stopniowo (+1–2 km co 1–2 tyg., co 3–4 tyg. tydzień lżejszy). Sobota — pełny odpoczynek przed długim biegiem, żeby biec na świeżych nogach. Po KAŻDYM biegu: stretching zginaczy biodra + glute bridge (bieganie nasila APT).</p>
     </div>
     <div class="section-label">Zapisz dzisiejszy bieg</div>
     <div class="run-form">

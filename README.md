@@ -22,8 +22,8 @@ Osobista aplikacja treningowa (PWA) do prowadzenia planu siłowo-korekcyjnego r�
 | Środa | Dzień A — Push |
 | Czwartek | Bieg spokojny (jeśli w planie Runna) |
 | Piątek | Dzień C — Pull |
-| Sobota | Bieg — długi dystans |
-| Niedziela | Odpoczynek |
+| Sobota | Odpoczynek |
+| Niedziela | Bieg — długi dystans |
 
 Codziennie dodatkowo ~10 minut ćwiczeń korekcyjnych.
 

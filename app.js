@@ -96,8 +96,8 @@ const SCHEDULE = {
   3: {type:"gym", key:"a", label:"Dzień A — Push"},
   4: {type:"run", key:"easy", label:"Bieg — spokojny (jeśli w planie Runna)"},
   5: {type:"gym", key:"c", label:"Dzień C — Pull"},
-  6: {type:"run", key:"long", label:"Bieg — długi dystans"},
-  0: {type:"rest", label:"Odpoczynek"}
+  6: {type:"rest", label:"Odpoczynek"},
+  0: {type:"run", key:"long", label:"Bieg — długi dystans"}
 };
 const DAY_SHORT = ["Nd","Pon","Wt","Śr","Czw","Pt","Sob"];
 
@@ -136,6 +136,7 @@ function getSession(dateISO){
   const s = STATE.sessions[dateISO];
   if(!s.exercises) s.exercises = {};
   if(!s.corrective) s.corrective = {};
+  if(!s.custom) s.custom = {};
   if(!s.runs) s.runs = [];
   return s;
 }
@@ -162,7 +163,7 @@ function setOverride(val){
 /* ---------- RENDER: exercise cards ---------- */
 function exCardHTML(ex, dateISO, kind){
   const s = getSession(dateISO);
-  const store = kind === 'corrective' ? s.corrective : s.exercises;
+  const store = kind === 'corrective' ? s.corrective : (kind === 'custom' ? s.custom : s.exercises);
   const entry = store[ex.id] || {done:false, weight:""};
   const doneClass = entry.done ? "done" : "";
   const struckClass = entry.done ? "struck" : "";
@@ -190,7 +191,7 @@ function exCardHTML(ex, dateISO, kind){
 
 function toggleEx(id, kind, dateISO){
   const s = getSession(dateISO);
-  const store = kind === 'corrective' ? s.corrective : s.exercises;
+  const store = kind === 'corrective' ? s.corrective : (kind === 'custom' ? s.custom : s.exercises);
   const entry = store[id] || {done:false, weight:""};
   entry.done = !entry.done;
   store[id] = entry;
@@ -199,7 +200,7 @@ function toggleEx(id, kind, dateISO){
 }
 function updateWeight(id, kind, dateISO, val){
   const s = getSession(dateISO);
-  const store = kind === 'corrective' ? s.corrective : s.exercises;
+  const store = kind === 'corrective' ? s.corrective : (kind === 'custom' ? s.custom : s.exercises);
   const entry = store[id] || {done:false, weight:""};
   entry.weight = val;
   store[id] = entry;
@@ -215,11 +216,15 @@ function renderDayPanel(key){
   document.getElementById(`list-${key}-stretch`).innerHTML = d.stretch.map(ex=>exCardHTML(ex,dateISO,'exercise')).join('');
   const corrEl = document.getElementById(`list-${key}-corrective`);
   if(corrEl) corrEl.innerHTML = CORRECTIVE.map(ex=>exCardHTML(ex,dateISO,'corrective')).join('');
+  const custEl = document.getElementById(`list-${key}-custom`);
+  if(custEl) custEl.innerHTML = customSectionHTML(dateISO,'p'+key);
 }
 
 function renderCorrective(){
   const dateISO = todayISO();
   document.getElementById('list-corrective').innerHTML = CORRECTIVE.map(ex=>exCardHTML(ex,dateISO,'corrective')).join('');
+  const custEl = document.getElementById('list-corrective-custom');
+  if(custEl) custEl.innerHTML = customSectionHTML(todayISO(),'kor');
 }
 
 /* ---------- RENDER: dziś ---------- */
@@ -309,6 +314,7 @@ function renderDzis(){
 
   html += `<div class="section-label">Codzienne ćwiczenia korekcyjne</div>`;
   html += CORRECTIVE.map(ex=>exCardHTML(ex,dateISO,'corrective')).join('');
+  html += customSectionHTML(dateISO,'dzis');
 
   document.getElementById('dzisContent').innerHTML = html;
 }
@@ -417,7 +423,7 @@ function fmtDate(iso){
 
 /* ---------- PROGRESS ---------- */
 function dayHasGym(s){
-  return s && s.exercises && Object.values(s.exercises).some(e=>e.done);
+  return s && ((s.exercises && Object.values(s.exercises).some(e=>e.done)) || (s.custom && Object.values(s.custom).some(e=>e.done)));
 }
 function dayHasCorrective(s){
   return s && s.corrective && Object.values(s.corrective).some(e=>e.done);
@@ -494,7 +500,7 @@ function renderProgress(){
   if(!dates.length){ logEl.innerHTML = '<div class="empty">Brak wpisów. Zaznacz ćwiczenia w planie, żeby zaczęły się tu pojawiać.</div>'; return; }
   logEl.innerHTML = dates.map(iso=>{
     const s = STATE.sessions[iso];
-    const exDone = Object.values(s.exercises||{}).filter(e=>e.done).length;
+    const exDone = Object.values(s.exercises||{}).filter(e=>e.done).length + Object.values(s.custom||{}).filter(e=>e.done).length;
     const corDone = Object.values(s.corrective||{}).filter(e=>e.done).length;
     const runCount = (s.runs||[]).length;
     const parts = [];
@@ -547,13 +553,14 @@ function buildWeekExport(){
     const dayName = dd.toLocaleDateString('pl-PL',{weekday:'long', day:'numeric', month:'short'});
     lines.push('— ' + dayName.charAt(0).toUpperCase() + dayName.slice(1) + ' —');
 
-    const doneEx = Object.entries(s.exercises||{}).filter(([id,e])=>e.done);
+    const doneEx = Object.entries(s.exercises||{}).filter(([id,e])=>e.done)
+      .concat(Object.entries(s.custom||{}).filter(([id,e])=>e.done).map(([id,e])=>[id,{...e, _customName:(e.name||id)+' (poza planem)'+(e.sets?' '+e.sets:'')}]));
     if(doneEx.length){
       gymCount++;
       const sched = effectiveSched(iso, dd.getDay());
       if(sched && sched.type==='gym') lines.push('Siłownia: ' + sched.label + (sched.overridden ? ' (zamiana)' : ''));
       for(const [id,e] of doneEx){
-        const nm = names[id] || id;
+        const nm = e._customName || names[id] || id;
         lines.push('  • ' + nm + (e.weight ? ' — ' + e.weight : ''));
       }
     }
@@ -648,6 +655,65 @@ function importBackup(input){
   };
   reader.onerror = () => alert('Nie udało się odczytać pliku.');
   reader.readAsText(file);
+}
+
+/* ---------- ĆWICZENIA WŁASNE (poza planem) ---------- */
+function customCardHTML(id, entry, dateISO){
+  const doneClass = entry.done ? "done" : "";
+  const struckClass = entry.done ? "struck" : "";
+  const showLog = entry.done ? "show" : "";
+  return `
+  <div class="ex-card" data-exid="${id}" data-kind="custom" data-date="${dateISO}">
+    <div class="ex-top">
+      <div class="checkbox ${doneClass}" onclick="toggleEx('${id}','custom','${dateISO}')">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ex-body">
+        <div class="ex-header">
+          <span class="ex-name ${struckClass}">${entry.name}</span>
+          ${entry.sets ? `<span class="ex-sets">${entry.sets}</span>` : ''}
+        </div>
+        <div class="ex-log ${showLog}">
+          <input type="text" placeholder="ciężar / notatka (np. 20kg × 10)" value="${entry.weight ? entry.weight.replace(/"/g,'&quot;') : ''}" oninput="updateWeight('${id}','custom','${dateISO}', this.value)">
+        </div>
+      </div>
+      <button class="re-del" onclick="deleteCustom('${id}','${dateISO}')" aria-label="Usuń ćwiczenie">✕</button>
+    </div>
+  </div>`;
+}
+
+function customSectionHTML(dateISO, ctx){
+  const s = getSession(dateISO);
+  const entries = Object.entries(s.custom||{});
+  const cards = entries.map(([id,e])=>customCardHTML(id,e,dateISO)).join('');
+  return `<div class="section-label">Poza planem — dodaj własne</div>
+  ${cards}
+  <div class="custom-add">
+    <input type="text" id="cname-${ctx}" placeholder="nazwa ćwiczenia (np. wiosłowanie hantlą)">
+    <input type="text" id="csets-${ctx}" placeholder="serie × powt. (opcjonalnie)">
+    <button class="btn btn-small" onclick="addCustom('${ctx}','${dateISO}')">Dodaj ćwiczenie</button>
+  </div>`;
+}
+
+function addCustom(ctx, dateISO){
+  const nameEl = document.getElementById('cname-'+ctx);
+  const setsEl = document.getElementById('csets-'+ctx);
+  const name = (nameEl && nameEl.value || '').trim();
+  if(!name){ alert('Wpisz nazwę ćwiczenia.'); return; }
+  const s = getSession(dateISO);
+  const id = 'cst-' + Date.now();
+  s.custom[id] = {name: name, sets: (setsEl && setsEl.value || '').trim(), done: true, weight: ''};
+  saveState();
+  renderAll();
+}
+
+function deleteCustom(id, dateISO){
+  const s = getSession(dateISO);
+  if(!s.custom || !s.custom[id]) return;
+  if(!confirm('Usunąć ćwiczenie „' + s.custom[id].name + '"?')) return;
+  delete s.custom[id];
+  saveState();
+  renderAll();
 }
 
 /* ---------- OTWIERANIE DNIA Z KALENDARZA ---------- */
