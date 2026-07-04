@@ -170,9 +170,13 @@ main{padding:16px 18px 8px;max-width:640px;margin:0 auto}
 .dotcell.clickable:active{transform:scale(.94);transition:transform .08s}
 .run-entry.clickable{cursor:pointer}
 .run-entry.clickable:active{opacity:.75}
-.custom-add{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.custom-add input{width:100%}
-.btn-small{padding:10px 14px;font-size:13px}
+.custom-add{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.custom-add input{
+  display:block;width:100%;box-sizing:border-box;
+  min-height:52px;padding:14px 16px;font-size:16px;
+  border-radius:14px;
+}
+.btn-small{padding:14px 16px;font-size:15px;min-height:52px}
 .re-chev{color:var(--ink-soft);font-size:18px;align-self:center;flex:none;margin-left:4px}
 .dotcell{aspect-ratio:1;border-radius:7px;background:var(--surface-alt);position:relative;overflow:hidden}
 .dotcell .mark{position:absolute;inset:0}
