@@ -336,16 +336,13 @@ function goToday(){ switchTab('dzis'); }
 function renderScheduleGrid(){
   const wd = new Date().getDay();
   let html = '';
-  for(let i=1;i<=6;i++){
+  for(const i of [1,2,3,4,5,6,0]){
     const s = SCHEDULE[i];
     const cls = s.type === 'rest' ? 'rest' : s.type;
     const todayCls = i===wd ? 'today' : '';
     const shortLbl = s.type==='gym' ? ('Dzień '+s.key.toUpperCase()) : (s.type==='run' ? 'Bieg' : 'Odp.');
     html += `<div class="day-box ${cls} ${todayCls}">${DAY_SHORT[i]}<span class="lbl">${shortLbl}</span></div>`;
   }
-  const s0 = SCHEDULE[0];
-  const todayCls0 = wd===0 ? 'today' : '';
-  html += `<div class="day-box rest ${todayCls0}">${DAY_SHORT[0]}<span class="lbl">Odp.</span></div>`;
   document.getElementById('scheduleGrid').innerHTML = html;
 }
 
@@ -752,6 +749,23 @@ if('serviceWorker' in navigator){
   });
 }
 
+/* ---------- ODŚWIEŻANIE DNIA ---------- */
+let LAST_RENDER_DAY = todayISO();
+function refreshDayIfChanged(){
+  const now = todayISO();
+  if(now === LAST_RENDER_DAY) return;
+  // nowy dzień: przestaw widok i pole daty biegu na dziś
+  LAST_RENDER_DAY = now;
+  VIEW_DATE = now;
+  const rd = document.getElementById('runDate');
+  if(rd){ rd.value = now; rd.max = now; }
+  renderAll();
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshDayIfChanged(); });
+window.addEventListener('pageshow', refreshDayIfChanged);
+window.addEventListener('focus', refreshDayIfChanged);
+setInterval(refreshDayIfChanged, 60000);
+
 /* ---------- INIT ---------- */
 (async function init(){
   await loadState();
@@ -760,6 +774,7 @@ if('serviceWorker' in navigator){
   });
   const rd = document.getElementById('runDate');
   if(rd){ rd.value = todayISO(); rd.max = todayISO(); }
+  LAST_RENDER_DAY = todayISO();
   renderAll();
   switchTab('dzis');
 })();
