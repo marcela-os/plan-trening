@@ -161,24 +161,48 @@ function setOverride(val){
 }
 
 /* ---------- RENDER: exercise cards ---------- */
+/* ---------- OSTATNI CIĘŻAR + NOTATKA PRZED ODHACZENIEM ---------- */
+const OPEN_LOGS = new Set();
+function toggleLog(id, kind, dateISO){
+  const key = id + '|' + dateISO;
+  if(OPEN_LOGS.has(key)) OPEN_LOGS.delete(key); else OPEN_LOGS.add(key);
+  renderAll();
+}
+function lastEntryInfo(exId, kind, beforeISO){
+  const dates = Object.keys(STATE.sessions).filter(d => d < beforeISO).sort().reverse();
+  for(const d of dates){
+    const s = STATE.sessions[d];
+    const store = kind === 'corrective' ? (s.corrective||{}) : (s.exercises||{});
+    const e = store[exId];
+    if(e && e.weight && e.weight.trim()){
+      return {date: d, weight: e.weight.trim()};
+    }
+  }
+  return null;
+}
+
 function exCardHTML(ex, dateISO, kind){
   const s = getSession(dateISO);
   const store = kind === 'corrective' ? s.corrective : (kind === 'custom' ? s.custom : s.exercises);
   const entry = store[ex.id] || {done:false, weight:""};
   const doneClass = entry.done ? "done" : "";
   const struckClass = entry.done ? "struck" : "";
-  const showLog = entry.done ? "show" : "";
+  const logOpen = entry.done || (entry.weight && entry.weight.trim()) || OPEN_LOGS.has(ex.id + '|' + dateISO);
+  const showLog = logOpen ? "show" : "";
+  const last = (kind === 'custom') ? null : lastEntryInfo(ex.id, kind, dateISO);
+  const lastHTML = last ? `<div class="ex-last">Ostatnio: <b>${last.weight.replace(/</g,'&lt;')}</b> · ${fmtDate(last.date)}</div>` : '';
   return `
   <div class="ex-card" data-exid="${ex.id}" data-kind="${kind}" data-date="${dateISO}">
     <div class="ex-top">
       <div class="checkbox ${doneClass}" onclick="toggleEx('${ex.id}','${kind}','${dateISO}')">
         <svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="ex-body">
+      <div class="ex-body" onclick="if(event.target.tagName!=='INPUT') toggleLog('${ex.id}','${kind}','${dateISO}')">
         <div class="ex-header">
           <span class="ex-name ${struckClass}">${ex.name}</span>
           <span class="ex-sets">${ex.sets}</span>
         </div>
+        ${lastHTML}
         <span class="badge b-${ex.badge}">${BADGE_LABEL[ex.badge]}</span>
         <div class="ex-note">${ex.note}</div>
         <div class="ex-log ${showLog}">

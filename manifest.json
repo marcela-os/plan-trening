@@ -1,7 +1,7 @@
 {
-  "name": "Siła · masa · bieg",
+  "name": "Plan — postura, masa, półmaraton",
   "short_name": "Plan Treningowy",
-  "description": "Plan treningowy: siła, masa mięśniowa, przygotowanie do półmaratonu i maratonu",
+  "description": "Plan treningowy: postura, masa, przygotowanie do półmaratonu",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
